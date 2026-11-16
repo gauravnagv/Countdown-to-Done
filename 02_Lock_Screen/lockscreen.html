@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Countdown Lock Screen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+  Countdown Lock Screen
+  ---------------------
+  Open in a browser. Everything is controlled with URL parameters:
+    ?title=Countdown%20to%20Done   what you're counting down to
+    &deadline=2026-11-22T23:59             deadline (local time)
+    &mode=phone | laptop                   9:16 or 16:9 layout (auto-detected if omitted)
+    &theme=sage | dusk | clay              colour palette
+    &static=1                              wallpaper mode: no ticking seconds
+    &now=2026-11-16T09:00                  pretend it's this moment (used for screenshots)
+-->
+<style>
+  :root{
+    --bg1:#EEE9DD; --bg2:#C7D2BC; --ink:#2C372B; --muted:#66705F;
+    --accent:#6F8A5E; --accent2:#C27D4E; --line:rgba(44,55,43,.18); --card:rgba(255,255,255,.38);
+  }
+  [data-theme="dusk"]{
+    --bg1:#1C221E; --bg2:#34402F; --ink:#EEE7D7; --muted:#A9B29D;
+    --accent:#A7C08F; --accent2:#E3A677; --line:rgba(238,231,215,.2); --card:rgba(255,255,255,.06);
+  }
+  [data-theme="clay"]{
+    --bg1:#F4E6D6; --bg2:#D9A585; --ink:#3A2921; --muted:#7A5D4F;
+    --accent:#9A573A; --accent2:#5E7A57; --line:rgba(58,41,33,.18); --card:rgba(255,255,255,.32);
+  }
+
+  html,body{margin:0;height:100%;background:var(--bg1)}
+  body{color:var(--ink);font-family:Inter,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+
+  #app{--u:1vw;position:fixed;inset:0;overflow:hidden;
+    background:
+      radial-gradient(90% 60% at 15% 5%, var(--bg1) 0%, transparent 70%),
+      linear-gradient(165deg, var(--bg1) 0%, var(--bg2) 100%);}
+  #app.laptop{--u:1vh}
+
+  /* organic background */
+  .blob{position:absolute;filter:blur(calc(var(--u)*9));opacity:.42;border-radius:42% 58% 63% 37% / 45% 41% 59% 55%}
+  .blob.a{width:calc(var(--u)*80);height:calc(var(--u)*70);background:var(--accent);top:calc(var(--u)*-18);left:calc(var(--u)*-30)}
+  .blob.b{width:calc(var(--u)*70);height:calc(var(--u)*80);background:var(--accent2);bottom:calc(var(--u)*-30);right:calc(var(--u)*-28);opacity:.3}
+  .blob.c{width:calc(var(--u)*45);height:calc(var(--u)*45);background:var(--bg1);top:40%;left:45%;opacity:.5}
+  .grain{position:absolute;inset:0;opacity:.13;mix-blend-mode:multiply;pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+  [data-theme="dusk"] .grain{mix-blend-mode:screen;opacity:.06}
+  .sprig{position:absolute;color:var(--accent);opacity:.55}
+  .phone .sprig{width:calc(var(--u)*20);right:calc(var(--u)*4);top:calc(var(--u)*6);transform:rotate(18deg)}
+  .laptop .sprig{width:calc(var(--u)*16);right:calc(var(--u)*6);bottom:calc(var(--u)*4);transform:rotate(-12deg)}
+
+  /* type */
+  .eyebrow{font-size:calc(var(--u)*2.4);letter-spacing:.24em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+  .eyebrow b{color:var(--accent2);font-weight:600}
+  .title{font-family:Fraunces,Georgia,serif;font-weight:400;line-height:1.08;letter-spacing:-.01em}
+  .due{color:var(--muted);font-size:calc(var(--u)*2.6)}
+  .mantra{font-family:Fraunces,Georgia,serif;font-style:italic;font-weight:300;color:var(--muted)}
+
+  /* ring */
+  .ring{position:relative;aspect-ratio:1}
+  .ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+  .ring .track-c{fill:none;stroke:var(--line);stroke-width:1.1}
+  .ring .prog{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round}
+  .ring .tick{fill:var(--line)}
+  .ring .tick.m{fill:var(--accent2)}
+  .ring .tick.past{fill:var(--accent)}
+  .ring .face{position:absolute;inset:14%;border-radius:50%;background:var(--card);backdrop-filter:blur(6px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .days{font-family:Fraunces,Georgia,serif;font-weight:300;line-height:.9;letter-spacing:-.04em;font-variant-numeric:lining-nums}
+  .unit{letter-spacing:.22em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+  .sub{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500}
+
+  /* milestones */
+  .track{list-style:none;margin:0;padding:0}
+  .track li{position:relative}
+  .dot{display:block;border-radius:50%;border:calc(var(--u)*.35) solid var(--line);background:transparent;box-sizing:border-box;position:relative;z-index:1}
+  .track li.done .dot{background:var(--accent);border-color:var(--accent)}
+  .track li.next .dot{border-color:var(--accent2);background:var(--bg1);box-shadow:0 0 0 calc(var(--u)*1) color-mix(in srgb,var(--accent2) 22%,transparent)}
+  .tag{font-weight:600;letter-spacing:.06em}
+  .date{color:var(--muted)}
+  .track li.next .tag{color:var(--accent2)}
+  .next-line{color:var(--ink)}
+  .next-line b{color:var(--accent2);font-weight:600}
+
+  /* ---------- PHONE 9:16 ---------- */
+  .phone .content{position:absolute;left:7vw;right:7vw;top:46vw;bottom:11vw;display:flex;flex-direction:column;align-items:center;text-align:center}
+  .phone .left,.phone .right{display:contents}
+  .phone .eyebrow{order:1}
+  .phone .title{order:2;font-size:calc(var(--u)*7.4);margin-top:calc(var(--u)*2)}
+  .phone .due{order:3;display:none}
+  .phone .ring{order:4;width:calc(var(--u)*52);margin-top:calc(var(--u)*5)}
+  .phone .days{font-size:calc(var(--u)*22)}
+  .phone .unit{font-size:calc(var(--u)*2.4);margin-top:calc(var(--u)*1.5)}
+  .phone .sub{order:5;font-size:calc(var(--u)*3.4);margin:calc(var(--u)*4) 0 calc(var(--u)*7)}
+  .phone .track{order:6;margin-top:auto;width:100%;display:flex}
+  .phone .track li{flex:1;display:flex;flex-direction:column;align-items:center}
+  .phone .track li::after{content:"";position:absolute;top:calc(var(--u)*1.5 - var(--u)*.15);left:50%;width:100%;height:calc(var(--u)*.3);background:var(--line)}
+  .phone .track li.done::after{background:var(--accent)}
+  .phone .track li:last-child::after{display:none}
+  .phone .dot{width:calc(var(--u)*3);height:calc(var(--u)*3)}
+  .phone .tag{font-size:calc(var(--u)*2.6);margin-top:calc(var(--u)*1.6)}
+  .phone .date{font-size:calc(var(--u)*2.2);margin-top:calc(var(--u)*.4)}
+  .phone .name,.phone .desc{display:none}
+  .phone .next-line{order:7;font-size:calc(var(--u)*3);margin-top:calc(var(--u)*4)}
+  .phone .mantra{order:8;font-size:calc(var(--u)*3.6);margin-top:calc(var(--u)*3)}
+
+  /* ---------- LAPTOP 16:9 ---------- */
+  .laptop .content{position:absolute;inset:0;display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:calc(var(--u)*14);padding:0 calc(var(--u)*16)}
+  .laptop .left{display:flex;flex-direction:column;align-items:center}
+  .laptop .ring{width:calc(var(--u)*62)}
+  .laptop .days{font-size:calc(var(--u)*25)}
+  .laptop .unit{font-size:calc(var(--u)*2.3);margin-top:calc(var(--u)*1.5)}
+  .laptop .sub{font-size:calc(var(--u)*3);margin-top:calc(var(--u)*4)}
+  .laptop .right{max-width:calc(var(--u)*80)}
+  .laptop .title{font-size:calc(var(--u)*7.2);margin:calc(var(--u)*1.6) 0 calc(var(--u)*1.2)}
+  .laptop .due{margin-bottom:calc(var(--u)*5)}
+  .laptop .track li{padding:0 0 calc(var(--u)*2.6) calc(var(--u)*6.5)}
+  .laptop .track li::after{content:"";position:absolute;left:calc(var(--u)*1.25 - var(--u)*.15);top:calc(var(--u)*3);bottom:calc(var(--u)*-.2);width:calc(var(--u)*.3);background:var(--line)}
+  .laptop .track li.done::after{background:var(--accent)}
+  .laptop .track li:last-child::after{display:none}
+  .laptop .dot{position:absolute;left:0;top:calc(var(--u)*.2);width:calc(var(--u)*2.5);height:calc(var(--u)*2.5)}
+  .laptop .tag{font-size:calc(var(--u)*2.2)}
+  .laptop .date{font-size:calc(var(--u)*2.2);margin-left:calc(var(--u)*1)}
+  .laptop .name{font-family:Fraunces,Georgia,serif;font-size:calc(var(--u)*3);margin-top:calc(var(--u)*.4)}
+  .laptop .desc{font-size:calc(var(--u)*2);color:var(--muted);margin-top:calc(var(--u)*.3)}
+  .laptop .track li.done .name{opacity:.55;text-decoration:line-through;text-decoration-thickness:1px}
+  .laptop .track li.done .desc{display:none}
+  .laptop .next-line{display:none}
+  .laptop .mantra{font-size:calc(var(--u)*3.2);margin-top:calc(var(--u)*2.5)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="blob a"></div><div class="blob b"></div><div class="blob c"></div>
+  <svg class="sprig" viewBox="0 0 60 120" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
+    <path d="M30 118 C27 92 34 60 30 6"/>
+    <path d="M30 96 C18 90 12 80 14 68 C24 72 30 82 30 96Z"/>
+    <path d="M31 80 C43 74 49 64 47 52 C37 56 31 66 31 80Z"/>
+    <path d="M31 62 C20 57 15 48 17 37 C26 41 31 50 31 62Z"/>
+    <path d="M31 45 C41 40 45 32 44 22 C36 26 31 34 31 45Z"/>
+    <path d="M30 28 C23 24 20 17 21 9 C27 12 30 19 30 28Z"/>
+  </svg>
+  <div class="grain"></div>
+
+  <div class="content">
+    <div class="left">
+      <div class="ring">
+        <svg viewBox="0 0 100 100">
+          <circle class="track-c" cx="50" cy="50" r="46"/>
+          <circle class="prog" id="prog" cx="50" cy="50" r="46"/>
+          <g id="ticks"></g>
+        </svg>
+        <div class="face">
+          <div class="days" id="days">–</div>
+          <div class="unit" id="unit">days to go</div>
+        </div>
+      </div>
+      <div class="sub" id="sub"></div>
+    </div>
+    <div class="right">
+      <div class="eyebrow" id="eyebrow"></div>
+      <div class="title" id="title"></div>
+      <div class="due" id="due"></div>
+      <ol class="track" id="track"></ol>
+      <div class="next-line" id="nextLine"></div>
+      <div class="mantra" id="mantra"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const q = new URLSearchParams(location.search);
+  const TITLE    = q.get('title')    || 'Countdown to Done';
+  const DEADLINE = new Date(q.get('deadline') || '2026-11-22T23:59:00');
+  const THEME    = q.get('theme')    || 'sage';
+  const STATIC   = q.has('static');
+  const fixedNow = q.get('now') ? new Date(q.get('now')) : null;
+  const loadedAt = Date.now();
+  const now = () => fixedNow ? new Date(fixedNow.getTime() + (Date.now() - loadedAt)) : new Date();
+  const mode = q.get('mode') || (innerWidth > innerHeight ? 'laptop' : 'phone');
+
+  // T-minus checkpoints, worked backward from the deadline
+  const MILESTONES = [
+    { t: 14, name: 'Scope locked',       desc: 'Deliverable, success criteria and full task list defined.' },
+    { t: 7,  name: 'First full draft',   desc: 'A rough version of every part exists end to end.' },
+    { t: 3,  name: 'Feedback & polish',  desc: 'Share with a reviewer, fix the top issues.' },
+    { t: 1,  name: 'Final QA + buffer',  desc: 'Proofread, test, export, back up.' },
+    { t: 0,  name: 'Submit',             desc: 'Ship it early in the day, not at 11:59.' },
+  ];
+  const MANTRAS = {
+    7: 'Momentum beats motivation.', 6: 'Small steps, every single day.', 5: 'Hardest part first.',
+    4: 'Look at it with fresh eyes.', 3: 'Ask for feedback early.', 2: 'Fix what matters most.',
+    1: 'Check. Export. Back up.', 0: 'Ship it.'
+  };
+
+  const DAY = 864e5;
+  const WINDOW = 14;
+  const sod = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const fmt = (d, o) => d.toLocaleDateString('en-US', o);
+  const short = d => fmt(d, { weekday: 'short', month: 'short', day: 'numeric' });
+  const pad = n => String(n).padStart(2, '0');
+
+  document.documentElement.dataset.theme = THEME;
+  const app = document.getElementById('app');
+  app.classList.add(mode);
+  document.title = TITLE + ' · Countdown';
+
+  const dlDay = sod(DEADLINE);
+  const ms = MILESTONES.map(m => ({ ...m, date: addDays(dlDay, -m.t) }));
+  const $ = id => document.getElementById(id);
+
+  // ring ticks: one per day of the 14-day window
+  const C = 2 * Math.PI * 46;
+  const prog = $('prog');
+  prog.style.strokeDasharray = C;
+  let ticks = '';
+  for (let i = 0; i <= WINDOW; i++) {
+    const a = (i / WINDOW) * 2 * Math.PI;
+    const isM = MILESTONES.some(m => WINDOW - m.t === i);
+    const x = 50 + 46 * Math.cos(a), y = 50 + 46 * Math.sin(a);
+    ticks += `<circle class="tick${isM ? ' m' : ''}" data-i="${i}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${isM ? 1.9 : 0.9}"/>`;
+  }
+  $('ticks').innerHTML = ticks;
+
+  $('title').textContent = TITLE;
+  $('due').textContent = 'Due ' + fmt(DEADLINE, { weekday: 'long', month: 'long', day: 'numeric' }) +
+    ' · ' + DEADLINE.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  function render() {
+    const n = now();
+    const today = sod(n);
+    const diff = DEADLINE - n;
+    const daysLeft = Math.max(0, Math.round((dlDay - today) / DAY));
+
+    // big number
+    if (diff <= 0) { $('days').textContent = '✓'; $('unit').textContent = 'shipped'; }
+    else if (daysLeft === 0) { $('days').textContent = Math.ceil(diff / 36e5); $('unit').textContent = 'hours left'; }
+    else { $('days').textContent = daysLeft; $('unit').textContent = daysLeft === 1 ? 'day to go' : 'days to go'; }
+
+    $('eyebrow').innerHTML = `<b>T-${daysLeft}</b> &nbsp;·&nbsp; Due ${short(DEADLINE)}`;
+
+    // progress across the 14-day window
+    const start = addDays(DEADLINE, -WINDOW);
+    const frac = Math.min(1, Math.max(0, (n - start) / (DEADLINE - start)));
+    prog.style.strokeDashoffset = C * (1 - frac);
+    const dayIdx = WINDOW - daysLeft;
+    document.querySelectorAll('.tick').forEach(t => t.classList.toggle('past', +t.dataset.i <= dayIdx && !t.classList.contains('m')));
+
+    // sub line
+    if (STATIC) {
+      $('sub').textContent = `${fmt(n, { weekday: 'long', month: 'short', day: 'numeric' })} · Day ${Math.min(WINDOW, dayIdx)} of ${WINDOW}`;
+    } else if (diff > 0) {
+      const s = Math.floor(diff / 1000);
+      $('sub').textContent = `${Math.floor(s / 86400)}d ${pad(Math.floor(s % 86400 / 3600))}h ${pad(Math.floor(s % 3600 / 60))}m ${pad(s % 60)}s`;
+    } else {
+      $('sub').textContent = 'Deadline reached';
+    }
+
+    // milestones
+    let nextFound = false, nextM = null;
+    $('track').innerHTML = ms.map(m => {
+      const done = m.t === 0 ? diff <= 0 : m.date < today;
+      let cls = done ? 'done' : '';
+      if (!done && !nextFound) { cls = 'next'; nextFound = true; nextM = m; }
+      return `<li class="${cls}"><span class="dot"></span>
+        <span class="tag">T-${m.t}</span><span class="date">${fmt(m.date, { month: 'short', day: 'numeric' })}</span>
+        <div class="name">${m.name}</div><div class="desc">${m.desc}</div></li>`;
+    }).join('');
+
+    if (nextM) {
+      const isToday = +nextM.date === +today;
+      $('nextLine').innerHTML = isToday
+        ? `<b>Today</b> · ${nextM.name}`
+        : `<b>Next · T-${nextM.t}</b> &nbsp;${short(nextM.date)} — ${nextM.name}`;
+    } else $('nextLine').innerHTML = '<b>All checkpoints complete</b>';
+
+    $('mantra').textContent = MANTRAS[daysLeft] || MANTRAS[7];
+  }
+
+  render();
+  if (!STATIC) setInterval(render, 1000);
+})();
+</script>
+</body>
+</html>

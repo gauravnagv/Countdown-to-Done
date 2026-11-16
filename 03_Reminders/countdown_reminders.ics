@@ -1,0 +1,110 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Countdown Lock Screen//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Countdown to Done countdown
+BEGIN:VEVENT
+UID:countdown-t6-20261122@lockscreen
+DTSTAMP:20261116T124500Z
+DTSTART:20261116T090000
+DTEND:20261116T091500
+SUMMARY:T-6 | Countdown to Done: Daily focus
+DESCRIPTION:6 day(s) to go. Today: Close the gaps in the first draft\; write the open-issues list. Swap your lock screen to screenshots/daily/phone_T-6.png
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:T-6: Close the gaps in the first draft\; write the open-issues list.
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:countdown-t5-20261122@lockscreen
+DTSTAMP:20261116T124500Z
+DTSTART:20261117T090000
+DTEND:20261117T091500
+SUMMARY:T-5 | Countdown to Done: Daily focus
+DESCRIPTION:5 day(s) to go. Today: Tackle the hardest remaining piece first thing. Swap your lock screen to screenshots/daily/phone_T-5.png
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:T-5: Tackle the hardest remaining piece first thing.
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:countdown-t4-20261122@lockscreen
+DTSTAMP:20261116T124500Z
+DTSTART:20261118T090000
+DTEND:20261118T091500
+SUMMARY:T-4 | Countdown to Done: Daily focus
+DESCRIPTION:4 day(s) to go. Today: Full self-review with fresh eyes\; line up a reviewer for tomorrow. Swap your lock screen to screenshots/daily/phone_T-4.png
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:T-4: Full self-review with fresh eyes\; line up a reviewer for tomorrow.
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:countdown-t3-20261122@lockscreen
+DTSTAMP:20261116T124500Z
+DTSTART:20261119T090000
+DTEND:20261119T091500
+SUMMARY:T-3 | Countdown to Done: CHECKPOINT T-3
+DESCRIPTION:3 day(s) to go. Today: CHECKPOINT T-3: send to reviewer\, start polishing. Swap your lock screen to screenshots/daily/phone_T-3.png
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:T-3: CHECKPOINT T-3: send to reviewer\, start polishing.
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:countdown-t2-20261122@lockscreen
+DTSTAMP:20261116T124500Z
+DTSTART:20261120T090000
+DTEND:20261120T091500
+SUMMARY:T-2 | Countdown to Done: Daily focus
+DESCRIPTION:2 day(s) to go. Today: Apply feedback - top 3 issues only. Swap your lock screen to screenshots/daily/phone_T-2.png
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:T-2: Apply feedback - top 3 issues only.
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:countdown-t1-20261122@lockscreen
+DTSTAMP:20261116T124500Z
+DTSTART:20261121T090000
+DTEND:20261121T091500
+SUMMARY:T-1 | Countdown to Done: CHECKPOINT T-1
+DESCRIPTION:1 day(s) to go. Today: CHECKPOINT T-1: final QA\, export\, back up\, prep submission. Swap your lock screen to screenshots/daily/phone_T-1.png
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:T-1: CHECKPOINT T-1: final QA\, export\, back up\, prep submission.
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:countdown-t0-20261122@lockscreen
+DTSTAMP:20261116T124500Z
+DTSTART:20261122T090000
+DTEND:20261122T091500
+SUMMARY:T-0 | Countdown to Done: DEADLINE
+DESCRIPTION:0 day(s) to go. Today: DEADLINE: submit before noon (11:59 PM is the hard stop). Swap your lock screen to screenshots/daily/phone_T-0.png
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:T-0: DEADLINE: submit before noon (11:59 PM is the hard stop).
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:countdown-deadline-20261122@lockscreen
+DTSTAMP:20261116T124500Z
+DTSTART:20261122T215900
+DTEND:20261122T235900
+SUMMARY:HARD DEADLINE - Countdown to Done
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:2 hours to the hard deadline
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+END:VCALENDAR
